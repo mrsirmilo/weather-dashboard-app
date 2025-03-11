@@ -1,13 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import ActivitySuggester from "../components/ActivitySuggester";
-import {
-  WiDaySunny,
-  WiCloud,
-  WiRain,
-  WiSnow,
-  WiThunderstorm,
-} from "react-icons/wi";
+import { WiDaySunny, WiCloud, WiRain, WiSnow, WiThunderstorm } from "react-icons/wi";
 
 interface WeatherData {
   name: string;
@@ -30,7 +24,7 @@ const WeatherCard = () => {
   const [error, setError] = useState("");
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
 
-  const fetchWeather = async () => {
+  const fetchWeather = async (overrideUnit?: "metric" | "imperial") => {
     if (!city) {
       setError("Please enter a city name.");
       return;
@@ -43,7 +37,8 @@ const WeatherCard = () => {
       return;
     }
 
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${API_KEY}`;
+    const activeUnit = overrideUnit || unit;
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${activeUnit}&appid=${API_KEY}`;
 
     setError("");
 
@@ -74,8 +69,11 @@ const WeatherCard = () => {
   };
 
   const toggleUnits = () => {
-    setUnit((prevUnit) => (prevUnit === "metric" ? "imperial" : "metric"));
-    if (city) fetchWeather();
+    setUnit((prevUnit) => {
+      const newUnit = prevUnit === "metric" ? "imperial" : "metric";
+      if (city) fetchWeather(newUnit);
+      return newUnit;
+    });
   };
 
   return (
@@ -89,7 +87,7 @@ const WeatherCard = () => {
           onKeyDown={(e) => e.key === "Enter" && fetchWeather()}
           className="weather-input"
         />
-        <button onClick={fetchWeather} className="weather-button">
+        <button onClick={() => fetchWeather(unit)} className="weather-button">
           Get Weather
         </button>
         <button onClick={toggleUnits} className="convert-button">
@@ -109,11 +107,11 @@ const WeatherCard = () => {
           </div>
           <div className="weather-details">
             <p>
-              Temperature: {weather.main.temp}°{unit === "metric" ? "F" : "C"}
+              Temperature: {weather.main.temp}°{unit === "metric" ? "C" : "F"}
             </p>
             <p>Condition: {weather.weather[0].description}</p>
             <p>Humidity: {weather.main.humidity}%</p>
-            <p>Wind Speed: {weather.wind.speed} {unit === "metric" ? "mph" : "m/s"}</p>
+            <p>Wind Speed: {weather.wind.speed} {unit === "metric" ? "m/s" : "mph"}</p>
           </div>
         </div>
       ) : (
